@@ -1,0 +1,303 @@
+<!DOCTYPE html>
+<!-- saved from url=(0165)https://kbzypmzyegesnncs.tunnel.elice.io/files/home/elicer/Practice/%EC%83%81%EA%B0%80%EC%A0%95%EB%B3%B4_%EB%B6%84%EC%84%9D_%EB%8C%80%EC%8B%9C%EB%B3%B4%EB%93%9C.html -->
+<html lang="ko"><head><meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>상가(상권)정보 분석 대시보드</title>
+<style>
+  :root { --blue:#0a3d7a; --blue2:#3b6fb5; --line:#e3e8ef; --txt:#1c2733; }
+  * { box-sizing: border-box; }
+  body { margin:0; padding:24px; font-family:'Pretendard','Noto Sans KR','Malgun Gothic','Apple SD Gothic Neo',sans-serif;
+         color:var(--txt); background:#f4f6f9; }
+  .wrap { max-width:1200px; margin:0 auto; }
+  header { display:flex; justify-content:space-between; align-items:flex-start; gap:16px; flex-wrap:wrap; }
+  h1 { margin:0 0 4px; font-size:26px; }
+  .sub { color:#5b6b7c; font-size:13px; }
+  .btn { background:var(--blue); color:#fff; border:0; border-radius:8px; padding:12px 18px;
+         font-size:15px; font-weight:700; cursor:pointer; white-space:nowrap; }
+  .btn:hover { background:#0c4a94; }
+  .stats { display:grid; grid-template-columns:repeat(auto-fit,minmax(220px,1fr)); gap:14px; margin:20px 0; }
+  .stat { background:#fff; border:1px solid var(--line); border-radius:12px; padding:18px 20px; }
+  .stat .num { font-size:38px; font-weight:800; color:var(--blue2); letter-spacing:-1px; }
+  .stat .cap { margin-top:4px; font-size:13px; color:#5b6b7c; }
+  section { background:#fff; border:1px solid var(--line); border-radius:12px; padding:20px; margin-bottom:18px; }
+  h2 { margin:0 0 12px; font-size:18px; }
+  h3 { margin:0 0 10px; font-size:16px; }
+  table { border-collapse:collapse; width:100%; font-size:14px; }
+  th, td { border-bottom:1px solid var(--line); padding:9px 10px; text-align:left; vertical-align:top; }
+  th { background:#eef2f7; white-space:nowrap; }
+  td.n { text-align:right; white-space:nowrap; }
+  tr.total td { font-weight:700; background:#f7fafd; }
+  .selbar { display:flex; align-items:center; gap:12px; flex-wrap:wrap; margin-bottom:4px; }
+  select { font:inherit; padding:8px 12px; border:1px solid #b9c4d0; border-radius:8px; background:#fff; min-width:220px; }
+  #selInfo { font-size:13px; color:#5b6b7c; }
+  .grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(500px,1fr)); gap:18px; }
+  .chart { width:100%; height:auto; display:block; }
+  svg text.lbl { font-size:12.5px; fill:#41505f; }
+  svg text.lbl.hl { fill:var(--blue); font-weight:700; }
+  svg text.val { font-size:12px; fill:#5b6b7c; }
+  svg text.val.hl { fill:var(--blue); font-weight:700; }
+  .legend { display:flex; flex-wrap:wrap; gap:6px 14px; font-size:12.5px; color:#41505f; margin:6px 0 10px; }
+  .legend span b { display:inline-block; width:11px; height:11px; border-radius:3px; margin-right:5px; vertical-align:-1px; }
+  footer { color:#7a8896; font-size:12px; text-align:center; padding:10px 0 30px; }
+</style>
+<style>.f1l1o3bf{font-family:Inter, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Helvetica Neue', sans-serif, Arial;font-style:normal;font-weight:400}.f1l1o3bf button, .f1l1o3bf input, .f1l1o3bf textarea{font-family:inherit}</style></head>
+<body data-new-gr-c-s-check-loaded="14.1341.0" data-gr-ext-installed="">
+<div class="wrap">
+
+  <header>
+    <div>
+      <h1>상가(상권)정보 분석 대시보드</h1>
+      <div class="sub">소상공인시장진흥공단 상가(상권)정보 2026.06 · 16개 지역 통합·정제본 기준 · 오프라인 열람용</div>
+    </div>
+    <button class="btn" id="dlBtn">분석 리포트 다운로드</button>
+  </header>
+
+  <div class="stats">
+    <div class="stat"><div class="num" id="nTotal">2,749,869</div><div class="cap">전체 가게 수 (정제 후)</div></div>
+    <div class="stat"><div class="num" id="nCat">10</div><div class="cap">업종 수 (대분류)</div></div>
+    <div class="stat"><div class="num" id="nRegion">16</div><div class="cap">지역 수 (시·도)</div></div>
+  </div>
+
+  <section>
+    <h2>데이터 정리 과정 요약</h2>
+    <table>
+      <tbody><tr><th>발견한 문제</th><th>처리 방법</th><th style="text-align:right">결과</th></tr>
+      <tr><td>'동정보'·'호정보' 열이 전부 빈칸</td><td>두 열 삭제 (39열 → 37열)</td><td class="n">열 2개 삭제</td></tr>
+      <tr><td>층정보에 '지'·'B1'·'반' 등 표기 혼재</td><td>지하 → 음수(-1, -2…), 반지하 → 0, 숫자 정규화</td><td class="n">음수 19,959 · 반지하 57 · 정규화 1,375,360건</td></tr>
+      <tr><td>주소에 시도명 반복 (세종: "세종특별자치시 세종특별자치시…")</td><td>반복 구간을 1회로 축약 (지번주소·도로명주소·도로명)</td><td class="n">47,448건 수정</td></tr>
+      <tr><td>가게 이름이 '업소명없음'</td><td>빈칸(이름 없음) 처리</td><td class="n">3,571건</td></tr>
+      <tr><td>위도·경도가 한국 밖이거나 빈칸</td><td>해당 행 제거</td><td class="n">0건 (이상 좌표 없음)</td></tr>
+      <tr><td>같은 가게가 다른 번호로 중복 등록</td><td>상호명+지점명+도로명주소+층 기준 하나만 유지</td><td class="n">22,615건 제거</td></tr>
+      <tr class="total"><td>합계</td><td>원본 2,772,484행 → 정제 후 2,749,869행</td><td class="n">22,615행 감소</td></tr>
+    </tbody></table>
+  </section>
+
+  <section>
+    <h2>그래프</h2>
+    <div class="selbar">
+      <label for="regionSel"><b>지역 선택</b></label>
+      <select id="regionSel"><option value="전국">전국</option><option value="경기도">경기도</option><option value="서울특별시">서울특별시</option><option value="전남광주통합특별시">전남광주통합특별시</option><option value="경상남도">경상남도</option><option value="부산광역시">부산광역시</option><option value="경상북도">경상북도</option><option value="인천광역시">인천광역시</option><option value="충청남도">충청남도</option><option value="대구광역시">대구광역시</option><option value="강원특별자치도">강원특별자치도</option><option value="전북특별자치도">전북특별자치도</option><option value="충청북도">충청북도</option><option value="대전광역시">대전광역시</option><option value="제주특별자치도">제주특별자치도</option><option value="울산광역시">울산광역시</option><option value="세종특별자치시">세종특별자치시</option></select>
+      <span id="selInfo">선택: 전국 · 2,749,869개 가게 (전국의 100.0%)</span>
+    </div>
+    <div class="sub" style="margin-bottom:14px">선택을 바꾸면 아래 4개 그래프와 리포트가 해당 지역 기준으로 바뀝니다.</div>
+    <div class="grid">
+      <section style="margin:0"><h3 id="t1">업종별 가게 수 — 전국</h3><div id="c1"><svg viewBox="0 0 840 308" class="chart"><text x="155" y="21" text-anchor="end" class="lbl">음식</text><rect x="165" y="8" width="505" height="21" rx="3" fill="#d1495b"></rect><text x="678" y="21" class="val">832,213 (30.3%)</text><text x="155" y="51" text-anchor="end" class="lbl">소매</text><rect x="165" y="38" width="390.17710009336554" height="21" rx="3" fill="#3b6fb5"></rect><text x="563.1771000933655" y="51" class="val">642,991 (23.4%)</text><text x="155" y="81" text-anchor="end" class="lbl">수리·개인</text><rect x="165" y="68" width="199.13874212491274" height="21" rx="3" fill="#8d6cab"></rect><text x="372.1387421249127" y="81" class="val">328,170 (11.9%)</text><text x="155" y="111" text-anchor="end" class="lbl">과학·기술</text><rect x="165" y="98" width="176.64165303834474" height="21" rx="3" fill="#2a9d8f"></rect><text x="349.64165303834477" y="111" class="val">291,096 (10.6%)</text><text x="155" y="141" text-anchor="end" class="lbl">교육</text><rect x="165" y="128" width="109.82455813595797" height="21" rx="3" fill="#e9a13b"></rect><text x="282.824558135958" y="141" class="val">180,985 (6.6%)</text><text x="155" y="171" text-anchor="end" class="lbl">시설관리·임대</text><rect x="165" y="158" width="72.2298918666255" height="21" rx="3" fill="#6b7f99"></rect><text x="245.2298918666255" y="171" class="val">119,031 (4.3%)</text><text x="155" y="201" text-anchor="end" class="lbl">예술·스포츠</text><rect x="165" y="188" width="69.43671872465342" height="21" rx="3" fill="#c97bb4"></rect><text x="242.43671872465342" y="201" class="val">114,428 (4.2%)</text><text x="155" y="231" text-anchor="end" class="lbl">부동산</text><rect x="165" y="218" width="63.59247572436384" height="21" rx="3" fill="#946b43"></rect><text x="236.59247572436385" y="231" class="val">104,797 (3.8%)</text><text x="155" y="261" text-anchor="end" class="lbl">숙박</text><rect x="165" y="248" width="47.8783736855829" height="21" rx="3" fill="#5aa05a"></rect><text x="220.87837368558291" y="261" class="val">78,901 (2.9%)</text><text x="155" y="291" text-anchor="end" class="lbl">보건의료</text><rect x="165" y="278" width="34.74445244186284" height="21" rx="3" fill="#aab2bd"></rect><text x="207.74445244186285" y="291" class="val">57,257 (2.1%)</text></svg></div></section>
+      <section style="margin:0"><h3>지역별 가게 수 — 전국</h3><div id="c2"><svg viewBox="0 0 840 488" class="chart"><text x="155" y="21" text-anchor="end" class="lbl">경기도</text><rect x="165" y="8" width="505" height="21" rx="3" fill="#7a93ad"></rect><text x="678" y="21" class="val">666,981</text><text x="155" y="51" text-anchor="end" class="lbl">서울특별시</text><rect x="165" y="38" width="416.7110682313289" height="21" rx="3" fill="#7a93ad"></rect><text x="589.7110682313289" y="51" class="val">550,373</text><text x="155" y="81" text-anchor="end" class="lbl">전남광주통합특별시</text><rect x="165" y="68" width="131.72244036936584" height="21" rx="3" fill="#7a93ad"></rect><text x="304.7224403693658" y="81" class="val">173,973</text><text x="155" y="111" text-anchor="end" class="lbl">경상남도</text><rect x="165" y="98" width="129.78415427126112" height="21" rx="3" fill="#7a93ad"></rect><text x="302.7841542712611" y="111" class="val">171,413</text><text x="155" y="141" text-anchor="end" class="lbl">부산광역시</text><rect x="165" y="128" width="120.04653805730598" height="21" rx="3" fill="#7a93ad"></rect><text x="293.04653805730595" y="141" class="val">158,552</text><text x="155" y="171" text-anchor="end" class="lbl">경상북도</text><rect x="165" y="158" width="108.74012153269733" height="21" rx="3" fill="#7a93ad"></rect><text x="281.74012153269734" y="171" class="val">143,619</text><text x="155" y="201" text-anchor="end" class="lbl">인천광역시</text><rect x="165" y="188" width="102.78594892508183" height="21" rx="3" fill="#7a93ad"></rect><text x="275.7859489250818" y="201" class="val">135,755</text><text x="155" y="231" text-anchor="end" class="lbl">충청남도</text><rect x="165" y="218" width="93.4238756426345" height="21" rx="3" fill="#7a93ad"></rect><text x="266.42387564263447" y="231" class="val">123,390</text><text x="155" y="261" text-anchor="end" class="lbl">대구광역시</text><rect x="165" y="248" width="88.9029747474066" height="21" rx="3" fill="#7a93ad"></rect><text x="261.9029747474066" y="261" class="val">117,419</text><text x="155" y="291" text-anchor="end" class="lbl">강원특별자치도</text><rect x="165" y="278" width="82.59597349849547" height="21" rx="3" fill="#7a93ad"></rect><text x="255.59597349849548" y="291" class="val">109,089</text><text x="155" y="321" text-anchor="end" class="lbl">전북특별자치도</text><rect x="165" y="308" width="74.16594325775397" height="21" rx="3" fill="#7a93ad"></rect><text x="247.16594325775395" y="321" class="val">97,955</text><text x="155" y="351" text-anchor="end" class="lbl">충청북도</text><rect x="165" y="338" width="70.29315677657985" height="21" rx="3" fill="#7a93ad"></rect><text x="243.29315677657985" y="351" class="val">92,840</text><text x="155" y="381" text-anchor="end" class="lbl">대전광역시</text><rect x="165" y="368" width="60.6350405783673" height="21" rx="3" fill="#7a93ad"></rect><text x="233.6350405783673" y="381" class="val">80,084</text><text x="155" y="411" text-anchor="end" class="lbl">제주특별자치도</text><rect x="165" y="398" width="44.25879447840343" height="21" rx="3" fill="#7a93ad"></rect><text x="217.25879447840344" y="411" class="val">58,455</text><text x="155" y="441" text-anchor="end" class="lbl">울산광역시</text><rect x="165" y="428" width="41.116650999053945" height="21" rx="3" fill="#7a93ad"></rect><text x="214.11665099905395" y="441" class="val">54,305</text><text x="155" y="471" text-anchor="end" class="lbl">세종특별자치시</text><rect x="165" y="458" width="11.861402348792543" height="21" rx="3" fill="#7a93ad"></rect><text x="184.86140234879255" y="471" class="val">15,666</text></svg></div></section>
+      <section style="margin:0"><h3>지역과 업종 비교 (지역별 100% 구성)</h3>
+        <div class="legend" id="legend"><span><b style="background:#d1495b"></b>음식</span><span><b style="background:#3b6fb5"></b>소매</span><span><b style="background:#8d6cab"></b>수리·개인</span><span><b style="background:#2a9d8f"></b>과학·기술</span><span><b style="background:#e9a13b"></b>교육</span><span><b style="background:#6b7f99"></b>시설관리·임대</span><span><b style="background:#c97bb4"></b>예술·스포츠</span><span><b style="background:#946b43"></b>부동산</span><span><b style="background:#5aa05a"></b>숙박</span><span><b style="background:#aab2bd"></b>보건의료</span></div><div id="c3"><svg viewBox="0 0 840 584" class="chart"><rect x="150" y="6" width="161.47775573816946" height="24" fill="#d1495b"><title>음식: 184,107개 (27.6%)</title></rect><rect x="311.47775573816944" y="6" width="130.23944460187022" height="24" fill="#3b6fb5"><title>소매: 148,491개 (22.3%)</title></rect><rect x="441.71720034003965" y="6" width="70.60195118001863" height="24" fill="#8d6cab"><title>수리·개인: 80,496개 (12.1%)</title></rect><rect x="512.3191515200583" y="6" width="69.71697094819793" height="24" fill="#2a9d8f"><title>과학·기술: 79,487개 (11.9%)</title></rect><rect x="582.0361224682563" y="6" width="48.84669878152451" height="24" fill="#e9a13b"><title>교육: 55,692개 (8.3%)</title></rect><rect x="630.8828212497808" y="6" width="26.468715000877086" height="24" fill="#6b7f99"><title>시설관리·임대: 30,178개 (4.5%)</title></rect><rect x="657.3515362506579" y="6" width="26.549406954620896" height="24" fill="#c97bb4"><title>예술·스포츠: 30,270개 (4.5%)</title></rect><rect x="683.9009432052787" y="6" width="26.301191488213306" height="24" fill="#946b43"><title>부동산: 29,987개 (4.5%)</title></rect><rect x="710.2021346934921" y="6" width="9.548840221835405" height="24" fill="#5aa05a"><title>숙박: 10,887개 (1.6%)</title></rect><rect x="719.7509749153276" y="6" width="15.249025084672576" height="24" fill="#aab2bd"><title>보건의료: 17,386개 (2.6%)</title></rect><text x="140" y="23" text-anchor="end" class="lbl">경기도</text><text x="743" y="23" class="val">666,981</text><rect x="150" y="42" width="148.95166550684718" height="24" fill="#d1495b"><title>음식: 140,135개 (25.5%)</title></rect><rect x="298.9516655068472" y="42" width="117.3490614546862" height="24" fill="#3b6fb5"><title>소매: 110,403개 (20.1%)</title></rect><rect x="416.30072696153337" y="42" width="56.80326796554337" height="24" fill="#8d6cab"><title>수리·개인: 53,441개 (9.7%)</title></rect><rect x="473.10399492707677" y="42" width="106.27879637990962" height="24" fill="#2a9d8f"><title>과학·기술: 99,988개 (18.2%)</title></rect><rect x="579.3827913069864" y="42" width="46.777848840695306" height="24" fill="#e9a13b"><title>교육: 44,009개 (8.0%)</title></rect><rect x="626.1606401476818" y="42" width="27.74422073757252" height="24" fill="#6b7f99"><title>시설관리·임대: 26,102개 (4.7%)</title></rect><rect x="653.9048608852543" y="42" width="22.15434805123071" height="24" fill="#c97bb4"><title>예술·스포츠: 20,843개 (3.8%)</title></rect><rect x="676.059208936485" y="42" width="26.08607253626177" height="24" fill="#946b43"><title>부동산: 24,542개 (4.5%)</title></rect><rect x="702.1452814727468" y="42" width="13.039847521589902" height="24" fill="#5aa05a"><title>숙박: 12,268개 (2.2%)</title></rect><rect x="715.1851289943367" y="42" width="19.814871005663434" height="24" fill="#aab2bd"><title>보건의료: 18,642개 (3.4%)</title></rect><text x="140" y="59" text-anchor="end" class="lbl">서울특별시</text><text x="743" y="59" class="val">550,373</text><rect x="150" y="78" width="186.3783173251022" height="24" fill="#d1495b"><title>음식: 55,427개 (31.9%)</title></rect><rect x="336.3783173251022" y="78" width="154.50431963580556" height="24" fill="#3b6fb5"><title>소매: 45,948개 (26.4%)</title></rect><rect x="490.8826369609078" y="78" width="78.64763497784139" height="24" fill="#8d6cab"><title>수리·개인: 23,389개 (13.4%)</title></rect><rect x="569.5302719387491" y="78" width="45.7009708403028" height="24" fill="#2a9d8f"><title>과학·기술: 13,591개 (7.8%)</title></rect><rect x="615.231242779052" y="78" width="26.406425134934732" height="24" fill="#e9a13b"><title>교육: 7,853개 (4.5%)</title></rect><rect x="641.6376679139867" y="78" width="24.7654808504768" height="24" fill="#6b7f99"><title>시설관리·임대: 7,365개 (4.2%)</title></rect><rect x="666.4031487644635" y="78" width="23.74997844493111" height="24" fill="#c97bb4"><title>예술·스포츠: 7,063개 (4.1%)</title></rect><rect x="690.1531272093946" y="78" width="19.402148609266956" height="24" fill="#946b43"><title>부동산: 5,770개 (3.3%)</title></rect><rect x="709.5552758186616" y="78" width="19.415598972254315" height="24" fill="#5aa05a"><title>숙박: 5,774개 (3.3%)</title></rect><rect x="728.9708747909159" y="78" width="6.029125209084168" height="24" fill="#aab2bd"><title>보건의료: 1,793개 (1.0%)</title></rect><text x="140" y="95" text-anchor="end" class="lbl">전남광주통합특별시</text><text x="743" y="95" class="val">173,973</text><rect x="150" y="114" width="214.29375251585353" height="24" fill="#d1495b"><title>음식: 62,791개 (36.6%)</title></rect><rect x="364.2937525158535" y="114" width="143.1707921802897" height="24" fill="#3b6fb5"><title>소매: 41,951개 (24.5%)</title></rect><rect x="507.4645446961432" y="114" width="75.8633534212691" height="24" fill="#8d6cab"><title>수리·개인: 22,229개 (13.0%)</title></rect><rect x="583.3278981174124" y="114" width="35.18607106812202" height="24" fill="#2a9d8f"><title>과학·기술: 10,310개 (6.0%)</title></rect><rect x="618.5139691855344" y="114" width="26.981675835555066" height="24" fill="#e9a13b"><title>교육: 7,906개 (4.6%)</title></rect><rect x="645.4956450210894" y="114" width="20.71234387123497" height="24" fill="#6b7f99"><title>시설관리·임대: 6,069개 (3.5%)</title></rect><rect x="666.2079888923245" y="114" width="22.14913687993326" height="24" fill="#c97bb4"><title>예술·스포츠: 6,490개 (3.8%)</title></rect><rect x="688.3571257722577" y="114" width="18.763629363000472" height="24" fill="#946b43"><title>부동산: 5,498개 (3.2%)</title></rect><rect x="707.1207551352583" y="114" width="23.00575218915718" height="24" fill="#5aa05a"><title>숙박: 6,741개 (3.9%)</title></rect><rect x="730.1265073244155" y="114" width="4.873492675584699" height="24" fill="#aab2bd"><title>보건의료: 1,428개 (0.8%)</title></rect><text x="140" y="131" text-anchor="end" class="lbl">경상남도</text><text x="743" y="131" class="val">171,413</text><rect x="150" y="150" width="196.58777561935517" height="24" fill="#d1495b"><title>음식: 53,281개 (33.6%)</title></rect><rect x="346.58777561935517" y="150" width="142.48287628033705" height="24" fill="#3b6fb5"><title>소매: 38,617개 (24.4%)</title></rect><rect x="489.0706518996922" y="150" width="77.51567309147788" height="24" fill="#8d6cab"><title>수리·개인: 21,009개 (13.3%)</title></rect><rect x="566.5863249911702" y="150" width="51.477874766638074" height="24" fill="#2a9d8f"><title>과학·기술: 13,952개 (8.8%)</title></rect><rect x="618.0641997578082" y="150" width="29.399061506635046" height="24" fill="#e9a13b"><title>교육: 7,968개 (5.0%)</title></rect><rect x="647.4632612644432" y="150" width="22.831500075684946" height="24" fill="#6b7f99"><title>시설관리·임대: 6,188개 (3.9%)</title></rect><rect x="670.2947613401282" y="150" width="22.314950300216964" height="24" fill="#c97bb4"><title>예술·스포츠: 6,048개 (3.8%)</title></rect><rect x="692.6097116403452" y="150" width="22.211640345123367" height="24" fill="#946b43"><title>부동산: 6,020개 (3.8%)</title></rect><rect x="714.8213519854685" y="150" width="11.559646046722841" height="24" fill="#5aa05a"><title>숙박: 3,133개 (2.0%)</title></rect><rect x="726.3809980321913" y="150" width="8.61900196780867" height="24" fill="#aab2bd"><title>보건의료: 2,336개 (1.5%)</title></rect><text x="140" y="167" text-anchor="end" class="lbl">부산광역시</text><text x="743" y="167" class="val">158,552</text><rect x="150" y="186" width="210.55177239780252" height="24" fill="#d1495b"><title>음식: 51,691개 (36.0%)</title></rect><rect x="360.55177239780255" y="186" width="152.79270152277903" height="24" fill="#3b6fb5"><title>소매: 37,511개 (26.1%)</title></rect><rect x="513.3444739205815" y="186" width="74.24769703172979" height="24" fill="#8d6cab"><title>수리·개인: 18,228개 (12.7%)</title></rect><rect x="587.5921709523113" y="186" width="32.72878240344244" height="24" fill="#2a9d8f"><title>과학·기술: 8,035개 (5.6%)</title></rect><rect x="620.3209533557538" y="186" width="23.494662962421405" height="24" fill="#e9a13b"><title>교육: 5,768개 (4.0%)</title></rect><rect x="643.8156163181752" y="186" width="21.99569694817538" height="24" fill="#6b7f99"><title>시설관리·임대: 5,400개 (3.8%)</title></rect><rect x="665.8113132663506" y="186" width="22.53336954024189" height="24" fill="#c97bb4"><title>예술·스포츠: 5,532개 (3.9%)</title></rect><rect x="688.3446828065925" y="186" width="15.099638627201136" height="24" fill="#946b43"><title>부동산: 3,707개 (2.6%)</title></rect><rect x="703.4443214337936" y="186" width="27.71457815470098" height="24" fill="#5aa05a"><title>숙박: 6,804개 (4.7%)</title></rect><rect x="731.1588995884946" y="186" width="3.8411004115054417" height="24" fill="#aab2bd"><title>보건의료: 943개 (0.7%)</title></rect><text x="140" y="203" text-anchor="end" class="lbl">경상북도</text><text x="743" y="203" class="val">143,619</text><rect x="150" y="222" width="174.82991418363966" height="24" fill="#d1495b"><title>음식: 40,571개 (29.9%)</title></rect><rect x="324.82991418363963" y="222" width="134.59029133365252" height="24" fill="#3b6fb5"><title>소매: 31,233개 (23.0%)</title></rect><rect x="459.4202055172922" y="222" width="73.49828735589848" height="24" fill="#8d6cab"><title>수리·개인: 17,056개 (12.6%)</title></rect><rect x="532.9184928731906" y="222" width="52.451990718573896" height="24" fill="#2a9d8f"><title>과학·기술: 12,172개 (9.0%)</title></rect><rect x="585.3704835917646" y="222" width="41.515155979521936" height="24" fill="#e9a13b"><title>교육: 9,634개 (7.1%)</title></rect><rect x="626.8856395712866" y="222" width="24.40749880299068" height="24" fill="#6b7f99"><title>시설관리·임대: 5,664개 (4.2%)</title></rect><rect x="651.2931383742772" y="222" width="29.634599093956023" height="24" fill="#c97bb4"><title>예술·스포츠: 6,877개 (5.1%)</title></rect><rect x="680.9277374682332" y="222" width="23.79989687304335" height="24" fill="#946b43"><title>부동산: 5,523개 (4.1%)</title></rect><rect x="704.7276343412766" y="222" width="14.366984641449669" height="24" fill="#5aa05a"><title>숙박: 3,334개 (2.5%)</title></rect><rect x="719.0946189827263" y="222" width="15.905381017273767" height="24" fill="#aab2bd"><title>보건의료: 3,691개 (2.7%)</title></rect><text x="140" y="239" text-anchor="end" class="lbl">인천광역시</text><text x="743" y="239" class="val">135,755</text><rect x="150" y="258" width="189.74215900802335" height="24" fill="#d1495b"><title>음식: 40,021개 (32.4%)</title></rect><rect x="339.74215900802335" y="258" width="154.80525164113786" height="24" fill="#3b6fb5"><title>소매: 32,652개 (26.5%)</title></rect><rect x="494.5474106491612" y="258" width="70.16301969365428" height="24" fill="#8d6cab"><title>수리·개인: 14,799개 (12.0%)</title></rect><rect x="564.7104303428155" y="258" width="37.7673231218089" height="24" fill="#2a9d8f"><title>과학·기술: 7,966개 (6.5%)</title></rect><rect x="602.4777534646244" y="258" width="30.70313639679066" height="24" fill="#e9a13b"><title>교육: 6,476개 (5.2%)</title></rect><rect x="633.180889861415" y="258" width="26.355579868708972" height="24" fill="#6b7f99"><title>시설관리·임대: 5,559개 (4.5%)</title></rect><rect x="659.536469730124" y="258" width="24.326404084609774" height="24" fill="#c97bb4"><title>예술·스포츠: 5,131개 (4.2%)</title></rect><rect x="683.8628738147338" y="258" width="18.324215900802333" height="24" fill="#946b43"><title>부동산: 3,865개 (3.1%)</title></rect><rect x="702.1870897155361" y="258" width="22.65754923413567" height="24" fill="#5aa05a"><title>숙박: 4,779개 (3.9%)</title></rect><rect x="724.8446389496718" y="258" width="10.155361050328228" height="24" fill="#aab2bd"><title>보건의료: 2,142개 (1.7%)</title></rect><text x="140" y="275" text-anchor="end" class="lbl">충청남도</text><text x="743" y="275" class="val">123,390</text><rect x="150" y="294" width="187.43874500719645" height="24" fill="#d1495b"><title>음식: 37,622개 (32.0%)</title></rect><rect x="337.4387450071964" y="294" width="150.69034824006337" height="24" fill="#3b6fb5"><title>소매: 30,246개 (25.8%)</title></rect><rect x="488.1290932472598" y="294" width="81.23408477333311" height="24" fill="#8d6cab"><title>수리·개인: 16,305개 (13.9%)</title></rect><rect x="569.3631780205928" y="294" width="50.484206133589964" height="24" fill="#2a9d8f"><title>과학·기술: 10,133개 (8.6%)</title></rect><rect x="619.8473841541828" y="294" width="34.7356049702348" height="24" fill="#e9a13b"><title>교육: 6,972개 (5.9%)</title></rect><rect x="654.5829891244176" y="294" width="21.547832974220526" height="24" fill="#6b7f99"><title>시설관리·임대: 4,325개 (3.7%)</title></rect><rect x="676.1308220986382" y="294" width="25.040325671313845" height="24" fill="#c97bb4"><title>예술·스포츠: 5,026개 (4.3%)</title></rect><rect x="701.1711477699521" y="294" width="20.66100886568613" height="24" fill="#946b43"><title>부동산: 4,147개 (3.5%)</title></rect><rect x="721.8321566356382" y="294" width="5.575034704775207" height="24" fill="#5aa05a"><title>숙박: 1,119개 (1.0%)</title></rect><rect x="727.4071913404134" y="294" width="7.592808659586609" height="24" fill="#aab2bd"><title>보건의료: 1,524개 (1.3%)</title></rect><text x="140" y="311" text-anchor="end" class="lbl">대구광역시</text><text x="743" y="311" class="val">117,419</text><rect x="150" y="330" width="200.08910155927728" height="24" fill="#d1495b"><title>음식: 37,312개 (34.2%)</title></rect><rect x="350.0891015592773" y="330" width="140.62329840772213" height="24" fill="#3b6fb5"><title>소매: 26,223개 (24.0%)</title></rect><rect x="490.71239996699944" y="330" width="63.13381734180348" height="24" fill="#8d6cab"><title>수리·개인: 11,773개 (10.8%)</title></rect><rect x="553.8462173088029" y="330" width="32.87270027225476" height="24" fill="#2a9d8f"><title>과학·기술: 6,130개 (5.6%)</title></rect><rect x="586.7189175810577" y="330" width="32.81371173995545" height="24" fill="#e9a13b"><title>교육: 6,119개 (5.6%)</title></rect><rect x="619.5326293210131" y="330" width="23.295107664384126" height="24" fill="#6b7f99"><title>시설관리·임대: 4,344개 (4.0%)</title></rect><rect x="642.8277369853972" y="330" width="22.538981932183813" height="24" fill="#c97bb4"><title>예술·스포츠: 4,203개 (3.9%)</title></rect><rect x="665.366718917581" y="330" width="13.04182823199406" height="24" fill="#946b43"><title>부동산: 2,432개 (2.2%)</title></rect><rect x="678.408547149575" y="330" width="46.970959491791106" height="24" fill="#5aa05a"><title>숙박: 8,759개 (8.0%)</title></rect><rect x="725.3795066413661" y="330" width="9.620493358633777" height="24" fill="#aab2bd"><title>보건의료: 1,794개 (1.6%)</title></rect><text x="140" y="347" text-anchor="end" class="lbl">강원특별자치도</text><text x="743" y="347" class="val">109,089</text><rect x="150" y="366" width="183.18911745189118" height="24" fill="#d1495b"><title>음식: 30,674개 (31.3%)</title></rect><rect x="333.1891174518912" y="366" width="168.30059721300597" height="24" fill="#3b6fb5"><title>소매: 28,181개 (28.8%)</title></rect><rect x="501.4897146648972" y="366" width="75.43994691439947" height="24" fill="#8d6cab"><title>수리·개인: 12,632개 (12.9%)</title></rect><rect x="576.9296615792966" y="366" width="40.89117451891175" height="24" fill="#2a9d8f"><title>과학·기술: 6,847개 (7.0%)</title></rect><rect x="617.8208360982084" y="366" width="27.161247511612476" height="24" fill="#e9a13b"><title>교육: 4,548개 (4.6%)</title></rect><rect x="644.9820836098208" y="366" width="24.187126741871264" height="24" fill="#6b7f99"><title>시설관리·임대: 4,050개 (4.1%)</title></rect><rect x="669.1692103516921" y="366" width="23.643662906436628" height="24" fill="#c97bb4"><title>예술·스포츠: 3,959개 (4.0%)</title></rect><rect x="692.8128732581287" y="366" width="17.988055739880558" height="24" fill="#946b43"><title>부동산: 3,012개 (3.1%)</title></rect><rect x="710.8009289980092" y="366" width="18.973457199734572" height="24" fill="#5aa05a"><title>숙박: 3,177개 (3.2%)</title></rect><rect x="729.7743861977438" y="366" width="5.225613802256139" height="24" fill="#aab2bd"><title>보건의료: 875개 (0.9%)</title></rect><text x="140" y="383" text-anchor="end" class="lbl">전북특별자치도</text><text x="743" y="383" class="val">97,955</text><rect x="150" y="402" width="195.11552132701422" height="24" fill="#d1495b"><title>음식: 30,965개 (33.4%)</title></rect><rect x="345.1155213270142" y="402" width="149.23045023696682" height="24" fill="#3b6fb5"><title>소매: 23,683개 (25.5%)</title></rect><rect x="494.34597156398104" y="402" width="72.70912322274881" height="24" fill="#8d6cab"><title>수리·개인: 11,539개 (12.4%)</title></rect><rect x="567.0550947867298" y="402" width="37.05084015510556" height="24" fill="#2a9d8f"><title>과학·기술: 5,880개 (6.3%)</title></rect><rect x="604.1059349418354" y="402" width="32.778651443343385" height="24" fill="#e9a13b"><title>교육: 5,202개 (5.6%)</title></rect><rect x="636.8845863851787" y="402" width="26.962677725118482" height="24" fill="#6b7f99"><title>시설관리·임대: 4,279개 (4.6%)</title></rect><rect x="663.8472641102973" y="402" width="26.59090909090909" height="24" fill="#c97bb4"><title>예술·스포츠: 4,220개 (4.5%)</title></rect><rect x="690.4381732012064" y="402" width="17.61175140025851" height="24" fill="#946b43"><title>부동산: 2,795개 (3.0%)</title></rect><rect x="708.0499246014649" y="402" width="16.559457130547177" height="24" fill="#5aa05a"><title>숙박: 2,628개 (2.8%)</title></rect><rect x="724.6093817320121" y="402" width="10.390618267987936" height="24" fill="#aab2bd"><title>보건의료: 1,649개 (1.8%)</title></rect><text x="140" y="419" text-anchor="end" class="lbl">충청북도</text><text x="743" y="419" class="val">92,840</text><rect x="150" y="438" width="172.6934843414415" height="24" fill="#d1495b"><title>음식: 23,641개 (29.5%)</title></rect><rect x="322.6934843414415" y="438" width="146.63715598621448" height="24" fill="#3b6fb5"><title>소매: 20,074개 (25.1%)</title></rect><rect x="469.33064032765594" y="438" width="79.75413316018181" height="24" fill="#8d6cab"><title>수리·개인: 10,918개 (13.6%)</title></rect><rect x="549.0847734878378" y="438" width="53.821986913740574" height="24" fill="#2a9d8f"><title>과학·기술: 7,368개 (9.2%)</title></rect><rect x="602.9067604015784" y="438" width="39.307289845662055" height="24" fill="#e9a13b"><title>교육: 5,381개 (6.7%)</title></rect><rect x="642.2140502472404" y="438" width="25.450027471155288" height="24" fill="#6b7f99"><title>시설관리·임대: 3,484개 (4.4%)</title></rect><rect x="667.6640777183957" y="438" width="26.43617951151291" height="24" fill="#c97bb4"><title>예술·스포츠: 3,619개 (4.5%)</title></rect><rect x="694.1002572299086" y="438" width="20.32934169122421" height="24" fill="#946b43"><title>부동산: 2,783개 (3.5%)</title></rect><rect x="714.4295989211328" y="438" width="6.435555167074571" height="24" fill="#5aa05a"><title>숙박: 881개 (1.1%)</title></rect><rect x="720.8651540882073" y="438" width="14.134845911792619" height="24" fill="#aab2bd"><title>보건의료: 1,935개 (2.4%)</title></rect><text x="140" y="455" text-anchor="end" class="lbl">대전광역시</text><text x="743" y="455" class="val">80,084</text><rect x="150" y="474" width="194.94996150885297" height="24" fill="#d1495b"><title>음식: 19,480개 (33.3%)</title></rect><rect x="344.949961508853" y="474" width="122.3841416474211" height="24" fill="#3b6fb5"><title>소매: 12,229개 (20.9%)</title></rect><rect x="467.33410315627407" y="474" width="50.91916859122402" height="24" fill="#8d6cab"><title>수리·개인: 5,088개 (8.7%)</title></rect><rect x="518.253271747498" y="474" width="41.99230177059277" height="24" fill="#2a9d8f"><title>과학·기술: 4,196개 (7.2%)</title></rect><rect x="560.2455735180909" y="474" width="28.37182448036952" height="24" fill="#e9a13b"><title>교육: 2,835개 (4.8%)</title></rect><rect x="588.6173979984603" y="474" width="31.9445727482679" height="24" fill="#6b7f99"><title>시설관리·임대: 3,192개 (5.5%)</title></rect><rect x="620.5619707467282" y="474" width="18.714395688991534" height="24" fill="#c97bb4"><title>예술·스포츠: 1,870개 (3.2%)</title></rect><rect x="639.2763664357198" y="474" width="17.52347959969207" height="24" fill="#946b43"><title>부동산: 1,751개 (3.0%)</title></rect><rect x="656.7998460354119" y="474" width="74.48729792147806" height="24" fill="#5aa05a"><title>숙박: 7,443개 (12.7%)</title></rect><rect x="731.28714395689" y="474" width="3.7128560431100843" height="24" fill="#aab2bd"><title>보건의료: 371개 (0.6%)</title></rect><text x="140" y="491" text-anchor="end" class="lbl">제주특별자치도</text><text x="743" y="491" class="val">58,455</text><rect x="150" y="510" width="210.35438725715863" height="24" fill="#d1495b"><title>음식: 19,527개 (36.0%)</title></rect><rect x="360.35438725715863" y="510" width="134.65610901390295" height="24" fill="#3b6fb5"><title>소매: 12,500개 (23.0%)</title></rect><rect x="495.0104962710616" y="510" width="82.29104134057637" height="24" fill="#8d6cab"><title>수리·개인: 7,639개 (14.1%)</title></rect><rect x="577.301537611638" y="510" width="38.32851486971734" height="24" fill="#2a9d8f"><title>과학·기술: 3,558개 (6.6%)</title></rect><rect x="615.6300524813553" y="510" width="32.446736027990056" height="24" fill="#e9a13b"><title>교육: 3,012개 (5.5%)</title></rect><rect x="648.0767885093453" y="510" width="22.762268667710153" height="24" fill="#6b7f99"><title>시설관리·임대: 2,113개 (3.9%)</title></rect><rect x="670.8390571770555" y="510" width="27.178989043366172" height="24" fill="#c97bb4"><title>예술·스포츠: 2,523개 (4.6%)</title></rect><rect x="698.0180462204216" y="510" width="20.112236442316547" height="24" fill="#946b43"><title>부동산: 1,867개 (3.4%)</title></rect><rect x="718.1302826627382" y="510" width="11.332658134610073" height="24" fill="#5aa05a"><title>숙박: 1,052개 (1.9%)</title></rect><rect x="729.4629407973482" y="510" width="5.537059202651689" height="24" fill="#aab2bd"><title>보건의료: 514개 (0.9%)</title></rect><text x="140" y="527" text-anchor="end" class="lbl">울산광역시</text><text x="743" y="527" class="val">54,305</text><rect x="150" y="546" width="185.51512830333206" height="24" fill="#d1495b"><title>음식: 4,968개 (31.7%)</title></rect><rect x="335.51512830333206" y="546" width="113.85580237456912" height="24" fill="#3b6fb5"><title>소매: 3,049개 (19.5%)</title></rect><rect x="449.3709306779012" y="546" width="60.83014170815779" height="24" fill="#8d6cab"><title>수리·개인: 1,629개 (10.4%)</title></rect><rect x="510.20107238605897" y="546" width="55.37820758330142" height="24" fill="#2a9d8f"><title>과학·기술: 1,483개 (9.5%)</title></rect><rect x="565.5792799693604" y="546" width="60.120643431635386" height="24" fill="#e9a13b"><title>교육: 1,610개 (10.3%)</title></rect><rect x="625.6999234009958" y="546" width="26.848908464189964" height="24" fill="#6b7f99"><title>시설관리·임대: 719개 (4.6%)</title></rect><rect x="652.5488318651858" y="546" width="28.155878973573344" height="24" fill="#c97bb4"><title>예술·스포츠: 754개 (4.8%)</title></rect><rect x="680.7047108387591" y="546" width="41.00153198008426" height="24" fill="#946b43"><title>부동산: 1,098개 (7.0%)</title></rect><rect x="721.7062428188433" y="546" width="4.555725775564918" height="24" fill="#5aa05a"><title>숙박: 122개 (0.8%)</title></rect><rect x="726.2619685944082" y="546" width="8.738031405591727" height="24" fill="#aab2bd"><title>보건의료: 234개 (1.5%)</title></rect><text x="140" y="563" text-anchor="end" class="lbl">세종특별자치시</text><text x="743" y="563" class="val">15,666</text></svg></div></section>
+      <section style="margin:0"><h3 id="t4">음식점 세부 종류 TOP 15 — 전국</h3><div id="c4"><svg viewBox="0 0 840 458" class="chart"><text x="155" y="21" text-anchor="end" class="lbl">백반/한정식</text><rect x="165" y="8" width="505" height="21" rx="3" fill="#d1495b"></rect><text x="678" y="21" class="val">178,966 (21.5%)</text><text x="155" y="51" text-anchor="end" class="lbl">카페</text><rect x="165" y="38" width="342.5255914531252" height="21" rx="3" fill="#d1495b"></rect><text x="515.5255914531251" y="51" class="val">121,387 (14.6%)</text><text x="155" y="81" text-anchor="end" class="lbl">요리 주점</text><rect x="165" y="68" width="156.6531072941229" height="21" rx="3" fill="#d1495b"></rect><text x="329.6531072941229" y="81" class="val">55,516 (6.7%)</text><text x="155" y="111" text-anchor="end" class="lbl">돼지고기 구이/찜</text><rect x="165" y="98" width="155.10113652872613" height="21" rx="3" fill="#d1495b"></rect><text x="328.1011365287261" y="111" class="val">54,966 (6.6%)</text><text x="155" y="141" text-anchor="end" class="lbl">김밥/만두/분식</text><rect x="165" y="128" width="124.24513594761015" height="21" rx="3" fill="#d1495b"></rect><text x="297.24513594761015" y="141" class="val">44,031 (5.3%)</text><text x="155" y="171" text-anchor="end" class="lbl">치킨</text><rect x="165" y="158" width="112.43040577539868" height="21" rx="3" fill="#d1495b"></rect><text x="285.4304057753987" y="171" class="val">39,844 (4.8%)</text><text x="155" y="201" text-anchor="end" class="lbl">국/탕/찌개류</text><rect x="165" y="188" width="89.36247667154656" height="21" rx="3" fill="#d1495b"></rect><text x="262.3624766715466" y="201" class="val">31,669 (3.8%)</text><text x="155" y="231" text-anchor="end" class="lbl">빵/도넛</text><rect x="165" y="218" width="87.39852821206263" height="21" rx="3" fill="#d1495b"></rect><text x="260.3985282120626" y="231" class="val">30,973 (3.7%)</text><text x="155" y="261" text-anchor="end" class="lbl">중국집</text><rect x="165" y="248" width="77.17527351563984" height="21" rx="3" fill="#d1495b"></rect><text x="250.17527351563984" y="261" class="val">27,350 (3.3%)</text><text x="155" y="291" text-anchor="end" class="lbl">일반 유흥 주점</text><rect x="165" y="278" width="69.93744621883486" height="21" rx="3" fill="#d1495b"></rect><text x="242.93744621883485" y="291" class="val">24,785 (3.0%)</text><text x="155" y="321" text-anchor="end" class="lbl">국수/칼국수</text><rect x="165" y="308" width="57.29876065844909" height="21" rx="3" fill="#d1495b"></rect><text x="230.29876065844908" y="321" class="val">20,306 (2.4%)</text><text x="155" y="351" text-anchor="end" class="lbl">경양식</text><rect x="165" y="338" width="54.82407272889823" height="21" rx="3" fill="#d1495b"></rect><text x="227.82407272889822" y="351" class="val">19,429 (2.3%)</text><text x="155" y="381" text-anchor="end" class="lbl">일식 회/초밥</text><rect x="165" y="368" width="54.660410357274564" height="21" rx="3" fill="#d1495b"></rect><text x="227.66041035727457" y="381" class="val">19,371 (2.3%)</text><text x="155" y="411" text-anchor="end" class="lbl">횟집</text><rect x="165" y="398" width="54.28229384352335" height="21" rx="3" fill="#d1495b"></rect><text x="227.28229384352335" y="411" class="val">19,237 (2.3%)</text><text x="155" y="441" text-anchor="end" class="lbl">피자</text><rect x="165" y="428" width="48.997127946090316" height="21" rx="3" fill="#d1495b"></rect><text x="221.9971279460903" y="441" class="val">17,364 (2.1%)</text></svg></div></section>
+    </div>
+  </section>
+
+  <footer>데이터: 소상공인시장진흥공단_상가(상권)정보_지역별_202606 (통합·정제) · 이 파일 하나만으로 인터넷 없이 동작합니다.</footer>
+</div>
+
+<script>
+const DATA = {"전국": {"total": 2749869, "cat": {"소매": 642991, "수리·개인": 328170, "교육": 180985, "음식": 832213, "시설관리·임대": 119031, "예술·스포츠": 114428, "보건의료": 57257, "숙박": 78901, "과학·기술": 291096, "부동산": 104797}, "food": [["백반/한정식", 178966], ["카페", 121387], ["요리 주점", 55516], ["돼지고기 구이/찜", 54966], ["김밥/만두/분식", 44031], ["치킨", 39844], ["국/탕/찌개류", 31669], ["빵/도넛", 30973], ["중국집", 27350], ["일반 유흥 주점", 24785], ["국수/칼국수", 20306], ["경양식", 19429], ["일식 회/초밥", 19371], ["횟집", 19237], ["피자", 17364]]}, "강원특별자치도": {"total": 109089, "cat": {"소매": 26223, "수리·개인": 11773, "교육": 6119, "음식": 37312, "시설관리·임대": 4344, "예술·스포츠": 4203, "보건의료": 1794, "숙박": 8759, "과학·기술": 6130, "부동산": 2432}, "food": [["백반/한정식", 8862], ["카페", 5124], ["돼지고기 구이/찜", 2650], ["요리 주점", 2568], ["치킨", 1685], ["김밥/만두/분식", 1659], ["국/탕/찌개류", 1533], ["국수/칼국수", 1372], ["횟집", 1354], ["중국집", 1157], ["빵/도넛", 1148], ["일반 유흥 주점", 1147], ["닭/오리고기 구이/찜", 699], ["경양식", 683], ["해산물 구이/찜", 676]]}, "경기도": {"total": 666981, "cat": {"음식": 184107, "소매": 148491, "숙박": 10887, "교육": 55692, "수리·개인": 80496, "과학·기술": 79487, "보건의료": 17386, "예술·스포츠": 30270, "시설관리·임대": 30178, "부동산": 29987}, "food": [["백반/한정식", 36181], ["카페", 26804], ["돼지고기 구이/찜", 11907], ["요리 주점", 10651], ["김밥/만두/분식", 10400], ["치킨", 9456], ["국/탕/찌개류", 8064], ["빵/도넛", 7417], ["중국집", 6429], ["일반 유흥 주점", 5027], ["일식 회/초밥", 4421], ["피자", 4344], ["국수/칼국수", 4297], ["경양식", 4074], ["생맥주 전문", 3667]]}, "경상남도": {"total": 171413, "cat": {"소매": 41951, "음식": 62791, "수리·개인": 22229, "예술·스포츠": 6490, "숙박": 6741, "과학·기술": 10310, "시설관리·임대": 6069, "교육": 7906, "보건의료": 1428, "부동산": 5498}, "food": [["백반/한정식", 14331], ["카페", 8281], ["돼지고기 구이/찜", 4629], ["요리 주점", 3973], ["일반 유흥 주점", 3627], ["치킨", 3131], ["김밥/만두/분식", 2980], ["횟집", 2464], ["국/탕/찌개류", 2293], ["빵/도넛", 2025], ["중국집", 1858], ["국수/칼국수", 1560], ["해산물 구이/찜", 1255], ["피자", 1107], ["경양식", 1005]]}, "경상북도": {"total": 143619, "cat": {"소매": 37511, "과학·기술": 8035, "음식": 51691, "시설관리·임대": 5400, "보건의료": 943, "예술·스포츠": 5532, "교육": 5768, "수리·개인": 18228, "숙박": 6804, "부동산": 3707}, "food": [["백반/한정식", 12901], ["카페", 7462], ["돼지고기 구이/찜", 3897], ["요리 주점", 3134], ["치킨", 2600], ["김밥/만두/분식", 2448], ["국/탕/찌개류", 1816], ["중국집", 1761], ["빵/도넛", 1626], ["일반 유흥 주점", 1556], ["횟집", 1440], ["국수/칼국수", 1431], ["해산물 구이/찜", 979], ["피자", 819], ["떡/한과", 769]]}, "대구광역시": {"total": 117419, "cat": {"소매": 30246, "음식": 37622, "수리·개인": 16305, "교육": 6972, "보건의료": 1524, "숙박": 1119, "예술·스포츠": 5026, "과학·기술": 10133, "시설관리·임대": 4325, "부동산": 4147}, "food": [["백반/한정식", 8084], ["카페", 5453], ["요리 주점", 2735], ["돼지고기 구이/찜", 2677], ["김밥/만두/분식", 2109], ["치킨", 1881], ["빵/도넛", 1499], ["중국집", 1183], ["일반 유흥 주점", 1132], ["국수/칼국수", 1088], ["국/탕/찌개류", 1087], ["일식 회/초밥", 857], ["경양식", 814], ["횟집", 782], ["피자", 766]]}, "대전광역시": {"total": 80084, "cat": {"예술·스포츠": 3619, "음식": 23641, "소매": 20074, "교육": 5381, "수리·개인": 10918, "과학·기술": 7368, "숙박": 881, "시설관리·임대": 3484, "부동산": 2783, "보건의료": 1935}, "food": [["백반/한정식", 5057], ["카페", 3809], ["돼지고기 구이/찜", 1700], ["요리 주점", 1399], ["김밥/만두/분식", 1396], ["치킨", 1196], ["국/탕/찌개류", 888], ["빵/도넛", 877], ["국수/칼국수", 755], ["중국집", 721], ["일식 회/초밥", 621], ["경양식", 558], ["피자", 531], ["생맥주 전문", 441], ["횟집", 402]]}, "부산광역시": {"total": 158552, "cat": {"소매": 38617, "음식": 53281, "교육": 7968, "예술·스포츠": 6048, "숙박": 3133, "수리·개인": 21009, "과학·기술": 13952, "시설관리·임대": 6188, "보건의료": 2336, "부동산": 6020}, "food": [["백반/한정식", 10565], ["카페", 7254], ["요리 주점", 4391], ["돼지고기 구이/찜", 3548], ["김밥/만두/분식", 2706], ["치킨", 2536], ["일반 유흥 주점", 2392], ["빵/도넛", 1964], ["횟집", 1956], ["중국집", 1735], ["국/탕/찌개류", 1512], ["경양식", 1345], ["일식 회/초밥", 1332], ["국수/칼국수", 1314], ["해산물 구이/찜", 1045]]}, "서울특별시": {"total": 550373, "cat": {"소매": 110403, "예술·스포츠": 20843, "음식": 140135, "교육": 44009, "수리·개인": 53441, "시설관리·임대": 26102, "과학·기술": 99988, "숙박": 12268, "부동산": 24542, "보건의료": 18642}, "food": [["백반/한정식", 26243], ["카페", 22584], ["요리 주점", 10660], ["김밥/만두/분식", 8038], ["돼지고기 구이/찜", 7800], ["빵/도넛", 6085], ["일식 회/초밥", 5960], ["경양식", 5908], ["치킨", 5492], ["국/탕/찌개류", 4761], ["중국집", 4685], ["피자", 3415], ["국수/칼국수", 2919], ["생맥주 전문", 2872], ["일반 유흥 주점", 2358]]}, "세종특별자치시": {"total": 15666, "cat": {"소매": 3049, "음식": 4968, "수리·개인": 1629, "교육": 1610, "과학·기술": 1483, "예술·스포츠": 754, "보건의료": 234, "시설관리·임대": 719, "부동산": 1098, "숙박": 122}, "food": [["백반/한정식", 999], ["카페", 849], ["김밥/만두/분식", 278], ["치킨", 277], ["돼지고기 구이/찜", 274], ["빵/도넛", 237], ["국/탕/찌개류", 236], ["요리 주점", 185], ["중국집", 180], ["국수/칼국수", 139], ["피자", 134], ["경양식", 128], ["일식 회/초밥", 125], ["해산물 구이/찜", 84], ["생맥주 전문", 69]]}, "울산광역시": {"total": 54305, "cat": {"수리·개인": 7639, "소매": 12500, "과학·기술": 3558, "음식": 19527, "교육": 3012, "예술·스포츠": 2523, "숙박": 1052, "시설관리·임대": 2113, "보건의료": 514, "부동산": 1867}, "food": [["백반/한정식", 4372], ["카페", 2533], ["돼지고기 구이/찜", 1584], ["요리 주점", 1347], ["치킨", 1037], ["김밥/만두/분식", 927], ["일반 유흥 주점", 913], ["국/탕/찌개류", 701], ["빵/도넛", 643], ["횟집", 585], ["중국집", 558], ["국수/칼국수", 492], ["해산물 구이/찜", 362], ["경양식", 359], ["일식 회/초밥", 355]]}, "인천광역시": {"total": 135755, "cat": {"소매": 31233, "음식": 40571, "숙박": 3334, "수리·개인": 17056, "교육": 9634, "과학·기술": 12172, "시설관리·임대": 5664, "예술·스포츠": 6877, "보건의료": 3691, "부동산": 5523}, "food": [["백반/한정식", 8185], ["카페", 5713], ["요리 주점", 2864], ["돼지고기 구이/찜", 2475], ["김밥/만두/분식", 2347], ["치킨", 2066], ["국/탕/찌개류", 1763], ["빵/도넛", 1511], ["중국집", 1384], ["일반 유흥 주점", 988], ["국수/칼국수", 962], ["횟집", 933], ["일식 회/초밥", 879], ["피자", 876], ["생맥주 전문", 874]]}, "전남광주통합특별시": {"total": 173973, "cat": {"소매": 45948, "수리·개인": 23389, "음식": 55427, "시설관리·임대": 7365, "예술·스포츠": 7063, "과학·기술": 13591, "교육": 7853, "숙박": 5774, "보건의료": 1793, "부동산": 5770}, "food": [["백반/한정식", 13462], ["카페", 8272], ["요리 주점", 4345], ["돼지고기 구이/찜", 3635], ["김밥/만두/분식", 2673], ["치킨", 2650], ["국/탕/찌개류", 2239], ["일반 유흥 주점", 1869], ["빵/도넛", 1792], ["횟집", 1598], ["생맥주 전문", 1531], ["중국집", 1491], ["피자", 1033], ["해산물 구이/찜", 1007], ["떡/한과", 933]]}, "전북특별자치도": {"total": 97955, "cat": {"소매": 28181, "음식": 30674, "교육": 4548, "과학·기술": 6847, "숙박": 3177, "예술·스포츠": 3959, "시설관리·임대": 4050, "수리·개인": 12632, "보건의료": 875, "부동산": 3012}, "food": [["백반/한정식", 7658], ["카페", 4827], ["돼지고기 구이/찜", 1804], ["요리 주점", 1795], ["김밥/만두/분식", 1569], ["치킨", 1525], ["국/탕/찌개류", 1137], ["빵/도넛", 1097], ["중국집", 1093], ["일반 유흥 주점", 777], ["국수/칼국수", 716], ["횟집", 657], ["생맥주 전문", 657], ["피자", 598], ["경양식", 570]]}, "제주특별자치도": {"total": 58455, "cat": {"소매": 12229, "수리·개인": 5088, "음식": 19480, "숙박": 7443, "예술·스포츠": 1870, "시설관리·임대": 3192, "과학·기술": 4196, "교육": 2835, "보건의료": 371, "부동산": 1751}, "food": [["백반/한정식", 4830], ["카페", 3008], ["요리 주점", 1519], ["돼지고기 구이/찜", 1498], ["일반 유흥 주점", 881], ["김밥/만두/분식", 818], ["빵/도넛", 763], ["치킨", 663], ["경양식", 635], ["횟집", 610], ["국/탕/찌개류", 544], ["국수/칼국수", 539], ["중국집", 480], ["일식 회/초밥", 426], ["피자", 381]]}, "충청남도": {"total": 123390, "cat": {"소매": 32652, "음식": 40021, "교육": 6476, "숙박": 4779, "시설관리·임대": 5559, "예술·스포츠": 5131, "수리·개인": 14799, "과학·기술": 7966, "보건의료": 2142, "부동산": 3865}, "food": [["백반/한정식", 9782], ["카페", 5273], ["돼지고기 구이/찜", 2617], ["요리 주점", 2174], ["치킨", 2050], ["김밥/만두/분식", 1989], ["국/탕/찌개류", 1710], ["중국집", 1502], ["빵/도넛", 1297], ["국수/칼국수", 1163], ["횟집", 1104], ["일반 유흥 주점", 1086], ["피자", 771], ["해산물 구이/찜", 734], ["생맥주 전문", 715]]}, "충청북도": {"total": 92840, "cat": {"소매": 23683, "음식": 30965, "과학·기술": 5880, "수리·개인": 11539, "시설관리·임대": 4279, "보건의료": 1649, "예술·스포츠": 4220, "교육": 5202, "숙박": 2628, "부동산": 2795}, "food": [["백반/한정식", 7454], ["카페", 4141], ["돼지고기 구이/찜", 2271], ["요리 주점", 1776], ["김밥/만두/분식", 1694], ["치킨", 1599], ["국/탕/찌개류", 1385], ["중국집", 1133], ["빵/도넛", 992], ["국수/칼국수", 901], ["일반 유흥 주점", 721], ["생맥주 전문", 594], ["피자", 545], ["해산물 구이/찜", 544], ["경양식", 494]]}};
+const CAT_COLORS = {
+  "음식":"#d1495b","소매":"#3b6fb5","수리·개인":"#8d6cab","과학·기술":"#2a9d8f",
+  "교육":"#e9a13b","시설관리·임대":"#6b7f99","예술·스포츠":"#c97bb4","부동산":"#946b43",
+  "숙박":"#5aa05a","보건의료":"#aab2bd"
+};
+const NEUTRAL = "#7a93ad", SEL = "#0a3d7a";
+const FOOD_COLOR = CAT_COLORS["음식"];
+
+const NAT = DATA["전국"];
+const CAT_ORDER = Object.keys(NAT.cat).sort((a,b)=>NAT.cat[b]-NAT.cat[a]);
+const REGIONS = Object.keys(DATA).filter(k=>k!=="전국").sort((a,b)=>DATA[b].total-DATA[a].total);
+
+function fmt(n){ return n.toLocaleString("ko-KR"); }
+function pct1(v, base){ return (v/base*100).toFixed(1); }
+function esc(s){ return s.replace(/&/g,"&amp;").replace(/</g,"&lt;"); }
+function josa(w, jongs, noJongs){ // 받침 있으면 jongs, 없으면 noJongs
+  const c = w.charCodeAt(w.length-1);
+  return w + ((c>=0xAC00 && c<=0xD7A3 && (c-0xAC00)%28!==0) ? jongs : noJongs);
+}
+function sortCat(region){
+  return Object.keys(region.cat).sort((a,b)=>region.cat[b]-region.cat[a])
+               .map(c=>({label:c, value:region.cat[c], color:CAT_COLORS[c],
+                         note:pct1(region.cat[c], region.total)+"%"}));
+}
+
+function hbar(items, hlLabel, hlColor){
+  const rowH=30, labelW=165, valW=170, W=840, H=items.length*rowH+8;
+  const barW=W-labelW-valW, max=Math.max.apply(null, items.map(i=>i.value));
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="chart">`;
+  items.forEach(function(it,i){
+    const y=i*rowH+6, w=Math.max(it.value/max*barW,2);
+    const hl = (hlLabel!==undefined && it.label===hlLabel);
+    s+=`<text x="${labelW-10}" y="${y+15}" text-anchor="end" class="lbl${hl?' hl':''}">${esc(it.label)}</text>`;
+    s+=`<rect x="${labelW}" y="${y+2}" width="${w}" height="${rowH-9}" rx="3" fill="${hl&&hlColor?hlColor:it.color}"/>`;
+    s+=`<text x="${labelW+w+8}" y="${y+15}" class="val${hl?' hl':''}">${fmt(it.value)}${it.note?' ('+it.note+')':''}</text>`;
+  });
+  return s+`</svg>`;
+}
+
+function stackedChart(regs, sel){
+  const rowH=36, labelW=150, valW=105, W=840, H=regs.length*rowH+8;
+  const barW=W-labelW-valW;
+  let s=`<svg viewBox="0 0 ${W} ${H}" class="chart">`;
+  regs.forEach(function(rg,i){
+    const y=i*rowH+6, isSel=(rg.name===sel);
+    let x=labelW;
+    CAT_ORDER.forEach(function(c){
+      const v=rg.cat[c]||0; if(!v) return;
+      const w=v/rg.total*barW;
+      s+=`<rect x="${x}" y="${y}" width="${Math.max(w,0.5)}" height="${rowH-12}" fill="${CAT_COLORS[c]}"><title>${esc(c)}: ${fmt(v)}개 (${pct1(v,rg.total)}%)</title></rect>`;
+      x+=w;
+    });
+    if(isSel) s+=`<rect x="${labelW-3}" y="${y-3}" width="${barW+6}" height="${rowH-6}" rx="5" fill="none" stroke="${SEL}" stroke-width="2.2"/>`;
+    s+=`<text x="${labelW-10}" y="${y+17}" text-anchor="end" class="lbl${isSel?' hl':''}">${esc(rg.name)}</text>`;
+    s+=`<text x="${labelW+barW+8}" y="${y+17}" class="val${isSel?' hl':''}">${fmt(rg.total)}</text>`;
+  });
+  return s+`</svg>`;
+}
+
+function render(sel){
+  const d=DATA[sel];
+  document.getElementById("selInfo").textContent =
+    "선택: " + sel + " · " + fmt(d.total) + "개 가게 (전국의 " + pct1(d.total, NAT.total) + "%)";
+  document.getElementById("t1").textContent = "업종별 가게 수 — " + sel;
+  document.getElementById("t4").textContent = "음식점 세부 종류 TOP 15 — " + sel;
+
+  document.getElementById("c1").innerHTML = hbar(sortCat(d));
+
+  const hlColor = sel==="전국" ? undefined : SEL;
+  document.getElementById("c2").innerHTML = hbar(
+    REGIONS.map(r=>({label:r, value:DATA[r].total, color:NEUTRAL})), sel==="전국"?undefined:sel, hlColor);
+
+  let regs = REGIONS.map(r=>({name:r, total:DATA[r].total, cat:DATA[r].cat}));
+  if(sel!=="전국") regs = [regs.find(r=>r.name===sel)].concat(regs.filter(r=>r.name!==sel));
+  document.getElementById("c3").innerHTML = stackedChart(regs, sel);
+
+  const foodTotal = d.cat["음식"]||0;
+  document.getElementById("c4").innerHTML = hbar(
+    d.food.map(f=>({label:f[0], value:f[1], color:FOOD_COLOR,
+                    note:foodTotal?pct1(f[1],foodTotal)+"%":""})));
+}
+
+function buildReport(sel){
+  const d=DATA[sel], nat=NAT, L=[];
+  L.push("상가(상권)정보 분석 리포트 — " + sel);
+  L.push("생성: " + new Date().toLocaleString("ko-KR"));
+  L.push("데이터: 소상공인시장진흥공단 상가(상권)정보 2026.06 (16개 지역 통합·정제본)");
+  L.push("정제 요약: 원본 2,772,484행 → 중복 22,615행 제거 등 정제 후 2,749,869행");
+  L.push("");
+  L.push("■ 규모");
+  L.push("- 전국 가게 수: " + fmt(nat.total) + "개");
+  if(sel==="전국"){
+    L.push("- 대상: 전국 16개 시·도 전체");
+  }else{
+    const rank = REGIONS.indexOf(sel)+1;
+    L.push("- " + sel + " 가게 수: " + fmt(d.total) + "개 (전국의 " + pct1(d.total, nat.total) + "%, 16개 지역 중 " + rank + "위)");
+  }
+  L.push("");
+  L.push("■ 업종 구성 TOP 5");
+  const cats = sortCat(d).slice(0,5);
+  cats.forEach(function(it,i){
+    const np = (nat.cat[it.label]||0)/nat.total*100;
+    const dp = (it.value/d.total*100) - np;
+    const cmp = (sel==="전국") ? "" :
+      " · 전국 " + np.toFixed(1) + "% 대비 " + (dp>=0?"+":"") + dp.toFixed(1) + "%p";
+    L.push((i+1) + ". " + it.label + ": " + fmt(it.value) + "개 (" + it.note + cmp + ")");
+  });
+  L.push("");
+  L.push("■ 음식점 세부 종류 TOP 5");
+  d.food.slice(0,5).forEach(function(f,i){
+    L.push((i+1) + ". " + f[0] + ": " + fmt(f[1]) + "개");
+  });
+  L.push("");
+  L.push("■ 해석");
+  if(sel==="전국"){
+    const food=nat.cat["음식"], retail=nat.cat["소매"];
+    L.push("- 음식(" + pct1(food,nat.total) + "%)과 소매(" + pct1(retail,nat.total) + "%) 두 업종이 전체의 " +
+           pct1(food+retail,nat.total) + "%로 절반 이상을 차지합니다.");
+    const top2 = REGIONS.slice(0,2);
+    L.push("- " + top2[0] + "(" + pct1(DATA[top2[0]].total,nat.total) + "%)와 " + top2[1] + "(" +
+           pct1(DATA[top2[1]].total,nat.total) + "%)에만 전체 가게의 약 " +
+           (pct1(DATA[top2[0]].total+DATA[top2[1]].total,nat.total)) + "%가 몰려 있습니다.");
+    L.push("- 음식점 세부 종류에서는 백반/한정식과 카페가 1·2위입니다.");
+  }else{
+    const top = cats[0];
+    L.push("- " + josa(sel, "은", "는") + " " + top.label + " 업종이 " + top.note + "로 가장 많습니다 (전국 평균 " +
+           (nat.cat[top.label]/nat.total*100).toFixed(1) + "%).");
+    const diffs = CAT_ORDER.map(function(c){
+      return {c:c, d:(d.cat[c]||0)/d.total*100 - (nat.cat[c]||0)/nat.total*100};
+    }).sort(function(a,b){ return b.d-a.d; });
+    const ov=diffs[0], un=diffs[diffs.length-1];
+    if(Math.abs(ov.d)<0.3 && Math.abs(un.d)<0.3){
+      L.push("- 업종 구성이 전국 평균과 전반적으로 비슷합니다.");
+    }else{
+      L.push("- 전국 대비 '" + ov.c + "' 비중이 " + (ov.d>=0?"+":"") + ov.d.toFixed(1) + "%p 높고, '" +
+             un.c + "' 비중은 " + un.d.toFixed(1) + "%p 낮습니다.");
+    }
+    const f=d.food[0];
+    if(f) L.push("- 음식점 중에서는 '" + f[0] + "'(" + fmt(f[1]) + "개)가 가장 많습니다.");
+  }
+  L.push("");
+  L.push("* 수치는 정제·통합 데이터(중복 제거 등) 기준이며, 상권정보 원본의 등록 기준일은 2026년 6월입니다.");
+  return L.join("\n");
+}
+
+// 초기화
+document.getElementById("nTotal").textContent = fmt(NAT.total);
+document.getElementById("nCat").textContent = CAT_ORDER.length;
+document.getElementById("nRegion").textContent = REGIONS.length;
+
+document.getElementById("legend").innerHTML = CAT_ORDER.map(function(c){
+  return "<span><b style='background:" + CAT_COLORS[c] + "'></b>" + esc(c) + "</span>";
+}).join("");
+
+const selEl = document.getElementById("regionSel");
+["전국"].concat(REGIONS).forEach(function(r){
+  const o=document.createElement("option"); o.value=r; o.textContent=r; selEl.appendChild(o);
+});
+selEl.addEventListener("change", function(){ render(selEl.value); });
+document.getElementById("dlBtn").addEventListener("click", function(){
+  const text = buildReport(selEl.value);
+  const btn = document.getElementById("dlBtn");
+  const name = "분석리포트_" + selEl.value + ".txt";
+  const prev = btn.textContent;
+  function done(){ btn.textContent = "저장됨 ✓"; setTimeout(function(){ btn.textContent = prev; }, 1600); }
+  function save(href){ // a 태그로 내려받기 (미지원 환경은 브라우저가 열어서 저장 가능)
+    const a = document.createElement("a");
+    a.href = href; a.download = name;
+    document.body.appendChild(a); a.click(); a.remove();
+  }
+  try{
+    const blob = new Blob(["\ufeff" + text], {type:"text/plain;charset=utf-8"});
+    const url = URL.createObjectURL(blob);
+    save(url);
+    setTimeout(function(){ URL.revokeObjectURL(url); }, 3000);
+  }catch(e){ // Blob 차단 환경이면 data URI로 대체 저장
+    save("data:text/plain;charset=utf-8," + encodeURIComponent("\ufeff" + text));
+  }
+  done();
+});
+
+render("전국");
+</script>
+
+
+</body><grammarly-desktop-integration data-grammarly-shadow-root="true" style="visibility: visible !important;"><template shadowrootmode="open"><style>
+      div.grammarly-desktop-integration {
+        position: absolute;
+        width: 1px;
+        height: 1px;
+        padding: 0;
+        margin: -1px;
+        overflow: hidden;
+        clip: rect(0, 0, 0, 0);
+        white-space: nowrap;
+        border: 0;
+        -moz-user-select: none;
+        -webkit-user-select: none;
+        -ms-user-select:none;
+        user-select:none;
+      }
+
+      div.grammarly-desktop-integration:before {
+        content: attr(data-content);
+      }
+    </style><div aria-label="grammarly-integration" role="group" tabindex="-1" class="grammarly-desktop-integration" data-content="{&quot;mode&quot;:&quot;full&quot;,&quot;isActive&quot;:true,&quot;isUserDisabled&quot;:false}"></div></template></grammarly-desktop-integration></html>
